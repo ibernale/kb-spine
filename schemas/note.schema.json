@@ -17,6 +17,7 @@
       "enum": [
         "arxiv", "anthropic", "openai", "deepmind", "meta", "mistral", "xai",
         "cohere", "microsoft", "nvidia", "apple", "ai2", "google",
+        "deepseek", "alibaba", "qwen", "baichuan", "moonshot",
         "stanford-hai", "mit-csail", "bair", "cmu", "princeton", "oxford",
         "huggingface", "substack", "mckinsey", "bcg", "deloitte", "wef", "other"
       ]
