@@ -4,6 +4,7 @@ lint_vault.py — validate a knowledge-base vault against the kb-spine contracts
 
 Usage:
     python lint_vault.py <vault-content-root> [--strict-wikilinks] [--max-issues N]
+                                              [--only-files PATH ...]
 
 Checks:
     - Frontmatter parses as YAML.
@@ -22,6 +23,7 @@ Exit code:
 """
 from __future__ import annotations
 
+import datetime as _dt
 import json
 import re
 import sys
@@ -69,6 +71,17 @@ FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?\n)---\s*\n", re.DOTALL)
 WIKILINK_RE = re.compile(r"\[\[([^\]\|#]+)(?:#[^\]\|]*)?(?:\|[^\]]*)?\]\]")
 
 
+def _coerce(v: Any) -> Any:
+    """Coerce YAML-native types into JSON-Schema-friendly equivalents."""
+    if isinstance(v, (_dt.date, _dt.datetime)):
+        return v.isoformat() if isinstance(v, _dt.datetime) else v.isoformat()
+    if isinstance(v, list):
+        return [_coerce(x) for x in v]
+    if isinstance(v, dict):
+        return {k: _coerce(x) for k, x in v.items()}
+    return v
+
+
 def parse_frontmatter(text: str) -> tuple[dict[str, Any] | None, str]:
     m = FRONTMATTER_RE.match(text)
     if not m:
@@ -78,7 +91,7 @@ def parse_frontmatter(text: str) -> tuple[dict[str, Any] | None, str]:
         fm = yaml.safe_load(raw) or {}
         if not isinstance(fm, dict):
             return None, text
-        return fm, text[m.end() :]
+        return _coerce(fm), text[m.end() :]
     except yaml.YAMLError:
         return None, text
 
@@ -168,9 +181,21 @@ def main() -> int:
 
     strict = "--strict-wikilinks" in sys.argv
     max_issues = 9999
-    for i, a in enumerate(sys.argv):
-        if a == "--max-issues" and i + 1 < len(sys.argv):
-            max_issues = int(sys.argv[i + 1])
+    only_files: list[Path] = []
+    args = sys.argv[2:]
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--max-issues" and i + 1 < len(args):
+            max_issues = int(args[i + 1])
+            i += 2
+        elif a == "--only-files":
+            i += 1
+            while i < len(args) and not args[i].startswith("--"):
+                only_files.append(Path(args[i]).resolve())
+                i += 1
+        else:
+            i += 1
 
     root = Path(sys.argv[1]).resolve()
     if not root.is_dir():
@@ -187,14 +212,26 @@ def main() -> int:
 
     total = 0
     files_with_issues = 0
-    for p in sorted(root.rglob("*.md")):
+    if only_files:
+        targets = [p for p in only_files if p.suffix == ".md" and p.is_file()]
+    else:
+        targets = sorted(root.rglob("*.md"))
+    for p in targets:
         # Skip files under auto/
-        if "auto" in p.relative_to(root).parts:
+        try:
+            rel_parts = p.relative_to(root).parts
+        except ValueError:
+            rel_parts = p.parts
+        if "auto" in rel_parts:
             continue
         issues = lint_file(p, schemas, vocab, idx, strict)
         if issues:
             files_with_issues += 1
-            print(f"\n{p.relative_to(root)}")
+            try:
+                label = p.relative_to(root)
+            except ValueError:
+                label = p
+            print(f"\n{label}")
             for i in issues[:20]:
                 print(f"  - {i}")
             if len(issues) > 20:
