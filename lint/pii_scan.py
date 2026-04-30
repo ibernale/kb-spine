@@ -108,29 +108,39 @@ def scan_file(path: Path, patterns: list[Pattern], allowlist: list[re.Pattern[st
 
 def main() -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("root", type=Path)
+    p.add_argument("root", type=Path, nargs="?", default=Path("."), help="directory to walk (ignored if --only-files)")
     p.add_argument("--strict", action="store_true", help="exit 1 on any finding")
     p.add_argument("--config", type=Path, default=None)
     p.add_argument("--include-full", action="store_true", help="also scan .full.md raw mirrors")
+    p.add_argument("--only-files", nargs="+", type=Path, default=None,
+                   help="scan only these files instead of walking the tree (ignores --include-full)")
     args = p.parse_args()
-
-    if not args.root.is_dir():
-        print(f"ERROR: {args.root} is not a directory", file=sys.stderr)
-        return 2
 
     extra_patterns, extra_allow = load_config(args.config)
     patterns = DEFAULT_PATTERNS + extra_patterns
     allowlist = DEFAULT_ALLOWLIST + extra_allow
 
+    if args.only_files:
+        targets = [f for f in args.only_files if f.is_file() and f.suffix in {".md", ".txt", ".yml", ".yaml"}]
+    else:
+        if not args.root.is_dir():
+            print(f"ERROR: {args.root} is not a directory", file=sys.stderr)
+            return 2
+        targets = sorted(args.root.rglob("*.md"))
+
     total = 0
     files = 0
-    for f in sorted(args.root.rglob("*.md")):
-        if not args.include_full and f.name.endswith(".full.md"):
+    for f in targets:
+        if not args.include_full and not args.only_files and f.name.endswith(".full.md"):
             continue
         findings = scan_file(f, patterns, allowlist)
         if findings:
             files += 1
-            print(f"\n{f.relative_to(args.root)}")
+            try:
+                label = f.relative_to(args.root) if not args.only_files else f
+            except ValueError:
+                label = f
+            print(f"\n{label}")
             for lineno, name, sample in findings[:10]:
                 print(f"  L{lineno} [{name}] {sample}")
             if len(findings) > 10:
