@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kb-spine/schemas/note.schema.json",
+  "title": "Ingested item note (paper / blog / report)",
+  "description": "Frontmatter contract for items written by run_ingest.py — papers, blog posts, reports.",
+  "type": "object",
+  "required": ["title", "url", "source", "type", "authors", "published", "ingested", "tags"],
+  "additionalProperties": true,
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "url": {
+      "type": "string",
+      "pattern": "^https?://"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "arxiv", "anthropic", "openai", "deepmind", "meta", "mistral", "xai",
+        "cohere", "microsoft", "nvidia", "apple", "ai2", "google",
+        "stanford-hai", "mit-csail", "bair", "cmu", "princeton", "oxford",
+        "huggingface", "substack", "mckinsey", "bcg", "deloitte", "wef", "other"
+      ]
+    },
+    "type": {
+      "type": "string",
+      "enum": ["paper", "blog-post", "report"]
+    },
+    "authors": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "published": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "ingested": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    }
+  }
+}

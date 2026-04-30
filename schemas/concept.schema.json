@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kb-spine/schemas/concept.schema.json",
+  "title": "Concept note",
+  "description": "Frontmatter contract for concept notes under concepts/ and concepts/_candidates/.",
+  "type": "object",
+  "required": ["type", "name", "slug", "status", "tags"],
+  "additionalProperties": true,
+  "properties": {
+    "type": { "const": "concept" },
+    "name": { "type": "string", "minLength": 1 },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "aliases": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["candidate", "draft-llm", "draft", "review", "evergreen", "archived"]
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 2
+    },
+    "first_seen": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "last_updated": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "promoted_from_candidate": { "type": "boolean" },
+    "linked_entities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "linked_papers": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
