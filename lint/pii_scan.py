@@ -126,7 +126,13 @@ def main() -> int:
         if not args.root.is_dir():
             print(f"ERROR: {args.root} is not a directory", file=sys.stderr)
             return 2
-        targets = sorted(args.root.rglob("*.md"))
+        # Skip the spine submodule and other vendored content — those repos
+        # carry their own lint contract and false-positive surface.
+        skip_dirs = {"_spine", ".git", "node_modules", "__pycache__", ".venv", "venv"}
+        targets = sorted(
+            f for f in args.root.rglob("*.md")
+            if not skip_dirs.intersection(f.parts)
+        )
 
     total = 0
     files = 0
