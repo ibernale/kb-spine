@@ -57,6 +57,10 @@ Inherited from the v3 ingest vocabulary. Closed list.
 - `governance/nis2`
 - `governance/mifid`
 - `governance/psd2`
+- `governance/psd3`
+- `governance/mica`
+- `governance/aml`
+- `governance/ai-rmf`
 - `governance/policy-other`
 
 ## `domain/*` — application domains

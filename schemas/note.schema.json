@@ -19,7 +19,12 @@
         "cohere", "microsoft", "nvidia", "apple", "ai2", "google",
         "deepseek", "alibaba", "qwen", "baichuan", "moonshot",
         "stanford-hai", "mit-csail", "bair", "cmu", "princeton", "oxford",
-        "huggingface", "substack", "mckinsey", "bcg", "deloitte", "wef", "other"
+        "huggingface", "substack", "mckinsey", "bcg", "deloitte", "wef",
+        "eba", "ecb", "esma", "eiopa", "aepd", "bde", "cnmv",
+        "eu-commission", "eu-ai-office", "enisa",
+        "bis", "fsb", "fatf", "nist", "iosco",
+        "langchain", "ietf", "owasp",
+        "other"
       ]
     },
     "type": {
