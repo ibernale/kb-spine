@@ -1279,8 +1279,18 @@ def main() -> int:
     if PHASE_WEEKLY in phases:
         is_sunday = datetime.now(timezone.utc).weekday() == 6
         if is_sunday or args.force_weekly:
-            client = anthropic.Anthropic()
-            write_weekly_digest(client, dry_run=args.dry_run_weekly)
+            # Weekly digest is the only phase that calls Claude; treat any
+            # API failure as a soft warning so the rest of the run (items
+            # already on disk, rollups, candidates) gets committed.
+            try:
+                client = anthropic.Anthropic()
+                write_weekly_digest(client, dry_run=args.dry_run_weekly)
+            except Exception as e:
+                print(
+                    f"WARNING: weekly digest failed ({type(e).__name__}: {e}). "
+                    f"Continuing — items and rollups already written are preserved.",
+                    file=sys.stderr,
+                )
             # Concept candidates also belong to the weekly cadence — refresh
             # them here even if --phase explicitly listed only weekly.
             if PHASE_CANDIDATES not in phases:
