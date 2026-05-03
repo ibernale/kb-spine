@@ -786,10 +786,27 @@ CANDIDATE_WINDOW_DAYS = 7
 CANDIDATE_TAG_NAMESPACES = ("research/", "governance/", "domain/")
 
 
+# Per-vault overrides for friendly concept names. The default coercion
+# (title-case each hyphen-separated word) gives ugly results for
+# acronym-heavy domains: "governance/dora" -> "Dora",
+# "governance/eu-ai-act" -> "Eu Ai Act". pipeline.yml may define
+# concept_name_overrides:{tag: "Pretty Name"} to fix specific tags.
+CONCEPT_NAME_OVERRIDES: dict[str, str] = dict(
+    PIPELINE_CONFIG.get("concept_name_overrides", {}) or {}
+)
+
+
 def friendly_name_from_tag(tag: str) -> str:
-    """research/agentic-coding -> 'Agentic coding'."""
+    """research/agentic-coding -> 'Agentic Coding'.
+
+    Title-cases each hyphen-separated word in the leaf. Per-vault
+    overrides via pipeline.yml > concept_name_overrides take precedence
+    for acronyms / fixed names.
+    """
+    if tag in CONCEPT_NAME_OVERRIDES:
+        return CONCEPT_NAME_OVERRIDES[tag]
     leaf = tag.split("/", 1)[-1]
-    return leaf.replace("-", " ").capitalize()
+    return " ".join(part.capitalize() for part in leaf.split("-"))
 
 
 def slug_from_tag(tag: str) -> str:
